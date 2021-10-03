@@ -14,11 +14,6 @@ const routes = [
     component: Home,
   },
   {
-    path: '/about',
-    name: 'About',
-    component: () => import('../views/About.vue'),
-  },
-  {
     path: '/bingo/:id',
     component: LotoCall,
     props: true,

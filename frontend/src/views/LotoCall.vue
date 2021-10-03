@@ -1,27 +1,27 @@
 <template>
   <div>
     <div class="call-info">
-      <span class="desc">Số vừa gọi: </span>
+      <span class="desc">Last called number: </span>
       <span
         class="number"
         v-if="rolls.length && seq > -1 && seq < rolls.length"
       >
         {{ rolls[seq] }}
       </span>
-      <span class="number" v-else>chưa có</span>
+      <span class="number" v-else>not yet</span>
     </div>
     <div class="buttons">
       <button :disabled="isLoading" @click="rollForward()" class="cta">
-        Gọi
+        Call
       </button>
       <button :disabled="isLoading" @click="rollBackward()" class="cta">
-        Quay xe
+        Go back
       </button>
       <button @click="copyUrl()" class="cta">
-        Chia sẻ
+        Share
       </button>
       <button @click="reroll()" class="cta">
-        Làm mới
+        Reroll
       </button>
     </div>
     <loto-call-table
@@ -68,13 +68,13 @@ export default {
       d.select();
       document.execCommand('copy');
       document.body.removeChild(d);
-      alert('Đã copy link để chia sẻ vào clipboard, không tin thì Ctrl + V');
+      alert('Copied to clipboard!');
     },
     updateRoll(rollsStr) {
       this.rolls = rollsStr.split(',').map((e) => Number(e));
     },
     reroll() {
-      if (window.confirm('"Em có chắc không?"')) {
+      if (window.confirm('"Are you sure about rerolling the game?"')) {
         this.$apiCaller
           .post(`bingo/${this.id}/reroll`)
           .then(() => {

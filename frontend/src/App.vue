@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="nav"/>
-    <h1>Chơi lô tô hông?</h1>
+    <h1>Let's play bingo!</h1>
     <router-view/>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <button @click="createGame()" class="cta">Tới luôn!</button>
+    <button @click="createGame()" class="cta">Start</button>
   </div>
 </template>
 

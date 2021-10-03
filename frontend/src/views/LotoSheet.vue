@@ -2,7 +2,7 @@
   <div>
     <div class="buttons">
       <button @click="resetMarking()" class="cta">
-        Xoá hết quẹt lại
+        Reset
       </button>
     </div>
     <div class="sheet noselect" v-if="sheet.length">
@@ -60,7 +60,7 @@ export default {
       }
     },
     resetMarking() {
-      if (window.confirm('"Em có chắc không?"')) {
+      if (window.confirm('"Are you sure about resetting marked boxes?"')) {
         this.$emit('resetMarking');
       }
     },
