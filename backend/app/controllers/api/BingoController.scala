@@ -30,8 +30,7 @@ class BingoController @Inject() (cc: ControllerComponents,
       c2 <- bingoSvc.addSheets(sheets)
       c3 <- bingoSvc.addRoll(roll)
     } yield (c1, c2, c3)
-    c.map {e => {
-      println(e)
+    c.map {_ => {
       Ok(Json.toJson(game)(Json.format[BingoGame]))
     }}
   }
@@ -39,7 +38,8 @@ class BingoController @Inject() (cc: ControllerComponents,
   // GET
   def getGame(uuid: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     bingoSvc.getGame(UUID.fromString(uuid)) map {
-      game => Ok(Json.toJson(game.get)(Json.format[BingoGame]))
+      case None => NotFound(Json.obj("message" -> "game not found"))
+      case Some(g) => Ok(Json.toJson(g)(Json.format[BingoGame]))
     }
   }
 
@@ -51,10 +51,14 @@ class BingoController @Inject() (cc: ControllerComponents,
       },
       data => {
         bingoSvc.getGame(UUID.fromString(uuid))
-          .map(e => e.get)
-          .map(g => BingoGame(g.id, data.currSeq))
-          .map(g => bingoSvc.updateGameSequence(g))
-          .map(_ => Ok)
+          .map(game => {
+            if (game.isDefined) {
+              for {
+                c <- bingoSvc.updateGameSequence(BingoGame(game.get.id, data.currSeq))
+              } yield c
+              Ok
+            } else NotFound
+          })
       }
     )
   }
@@ -62,29 +66,43 @@ class BingoController @Inject() (cc: ControllerComponents,
   // GET
   def getRoll(uuid: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     bingoSvc.getFirstEnabledRoll(UUID.fromString(uuid)) map {
-      roll => Ok(Json.toJson(roll.get)(Json.format[BingoGameRoll]))
+      case Some(roll) => Ok(Json.toJson(roll)(Json.format[BingoGameRoll]))
+      case None => NotFound(Json.obj("message" -> "game not found"))
     }
   }
   // POST
   def reroll(uuid: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
     val gameId: UUID = UUID.fromString(uuid)
     val roll: BingoGameRoll = BingoGameRoll(0, gameId, GameHelper.generateRoll().mkString(","), isEnabled = true)
-    bingoSvc.disableAllRolls(gameId)
-      .map(_ => bingoSvc.addRoll(roll))
-      .map(_ => bingoSvc.updateGameSequence(BingoGame(gameId, -1)))
-      .map(_ => Ok(Json.toJson(roll)(Json.format[BingoGameRoll])))
+    val gameFuture = for { g <- bingoSvc.getGame(gameId) } yield g
+    gameFuture.map { game =>
+      if (game.isDefined) {
+        for {
+          result <- bingoSvc.disableAllRolls(gameId)
+          .map(_ => bingoSvc.addRoll(roll))
+          .map(_ => bingoSvc.updateGameSequence(BingoGame(gameId, -1)))
+        } yield result
+        Ok(Json.toJson(roll) (Json.format[BingoGameRoll]))
+      } else {
+        NotFound(Json.obj("message" -> "game not found"))
+      }
+    }
   }
 
   // GET
   def getSheets(uuid: String): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
-    bingoSvc.getAllSheets(UUID.fromString(uuid)) map {
-      sheets => Ok(Json.toJson(sheets))
+    bingoSvc.getAllSheets(UUID.fromString(uuid)) map { sheets =>
+      if (sheets.nonEmpty) Ok(Json.toJson(sheets))
+      else NotFound(Json.obj("message" -> "sheets not found"))
     }
   }
 
   // GET
   def getSheet(uuid: String, sheetId: Int): Action[AnyContent] = Action.async { implicit request: Request[AnyContent] =>
-    bingoSvc.getSheet(UUID.fromString(uuid), sheetId) map { sheet => Ok(Json.toJson(sheet.get)) }
+    bingoSvc.getSheet(UUID.fromString(uuid), sheetId) map {
+      case Some(sheet) => Ok(Json.toJson(sheet))
+      case None => NotFound(Json.obj("message" -> "sheet not found"))
+    }
   }
 
 }

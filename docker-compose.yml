@@ -12,6 +12,21 @@ services:
       MYSQL_PASSWORD: bingo
     ports:
     - "3306:3306"
+  bingo-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      MYSQL_URL: jdbc:mysql://db:3306/bingogame?autoReconnect=true&useSSL=false
+      MYSQL_USER: bingo
+      MYSQL_PASSWORD: bingo
+    ports:
+    - "9000:9000"
+    depends_on:
+    - db
+    # entrypoint: ["sleep", "10000000"]
+  # bingo-front-end:
+
 
 volumes:
   db_data: {}

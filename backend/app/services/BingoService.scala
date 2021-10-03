@@ -40,7 +40,6 @@ class BingoService @Inject() (games: BingoGameDAL,
     sheets.getAll(gameId)
   }
 
-  // Rolls
   def addRoll(roll: BingoGameRoll): Future[String] = {
     rolls.add(roll)
   }
